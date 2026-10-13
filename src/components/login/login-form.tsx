@@ -25,7 +25,7 @@ export function LoginForm() {
 
     try {
       const response = await axios.post<{ token?: string }>(
-        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}/auth/login`,
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333"}/auth/login`,
         {
           email: formData.get("email"),
           password: formData.get("password"),

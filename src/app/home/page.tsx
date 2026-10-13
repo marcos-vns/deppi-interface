@@ -1,7 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { BookOpen, FileText, Home } from "lucide-react";
+import { useEffect, useSyncExternalStore } from "react";
+import axios from "axios";
+import { Home } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Forbidden } from "@/components/forbidden";
 import { LogoutButton } from "@/components/logout-button";
@@ -20,6 +21,14 @@ import {
 } from "@/components/ui/sidebar";
 
 type Access = "allowed" | "forbidden";
+
+type MeResponse = {
+  id: string;
+  name: string;
+  email: string;
+  roles: unknown[];
+  permissions: unknown[];
+};
 
 function subscribeToTokenChanges(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -46,6 +55,40 @@ export default function HomePage() {
     getServerAccessSnapshot,
   );
 
+  useEffect(() => {
+    if (access !== "allowed") return;
+
+    const token = window.localStorage.getItem("token");
+    if (!token) return;
+
+    const controller = new AbortController();
+
+    async function fetchMe() {
+      try {
+        const response = await axios.get<MeResponse>(
+          `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3333"}/auth/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          },
+        );
+
+        console.log("/auth/me name and roles:", {
+          name: response.data.name,
+          roles: response.data.roles,
+        });
+      } catch (error) {
+        if (!axios.isCancel(error)) {
+          console.error("Failed to fetch /auth/me:", error);
+        }
+      }
+    }
+
+    void fetchMe();
+
+    return () => controller.abort();
+  }, [access]);
+
   if (access === "forbidden") return <Forbidden />;
 
   return (
@@ -63,22 +106,6 @@ export default function HomePage() {
                     <a href="/home">
                       <Home />
                       <span>Início</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="#cursos">
-                      <BookOpen />
-                      <span>Cursos</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="#inscricoes">
-                      <FileText />
-                      <span>Inscrições</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
