@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { AppLogo } from "@/components/app-logo";
-import { Badge } from "@/components/ui/badge";
 
 export function LoginIntroduction() {
   return (
