@@ -1,59 +1,102 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { BookOpen, FileText, Home } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { Forbidden } from "@/components/forbidden";
 import { LogoutButton } from "@/components/logout-button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 
-function hasValidToken(token: string | null): boolean {
-  if (!token) return false;
+type Access = "allowed" | "forbidden";
 
-  const parts = token.split(".");
-  if (parts.length !== 3 || parts.some((part) => part.length === 0)) return false;
+function subscribeToTokenChanges(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener("auth-token-change", onChange);
 
-  try {
-    const payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const paddedPayload = payloadBase64.padEnd(Math.ceil(payloadBase64.length / 4) * 4, "=");
-    const binaryPayload = atob(paddedPayload);
-    const payloadBytes = Uint8Array.from(binaryPayload, (character) => character.charCodeAt(0));
-    const payload = JSON.parse(new TextDecoder().decode(payloadBytes)) as { exp?: unknown };
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener("auth-token-change", onChange);
+  };
+}
 
-    return typeof payload.exp !== "number" || payload.exp > Date.now() / 1000;
-  } catch {
-    return false;
-  }
+function getAccessSnapshot(): Access {
+  return window.localStorage.getItem("token") ? "allowed" : "forbidden";
+}
+
+function getServerAccessSnapshot(): Access {
+  return "forbidden";
 }
 
 export default function HomePage() {
-  const [access, setAccess] = useState<"checking" | "allowed" | "forbidden">("checking");
-
-  useEffect(() => {
-    if (hasValidToken(window.localStorage.getItem("token"))) {
-      setAccess("allowed");
-    } else {
-      setAccess("forbidden");
-    }
-  }, []);
-
-  if (access === "checking") {
-    return <main className="min-h-svh bg-background" aria-label="Verificando autenticação" />;
-  }
+  const access = useSyncExternalStore(
+    subscribeToTokenChanges,
+    getAccessSnapshot,
+    getServerAccessSnapshot,
+  );
 
   if (access === "forbidden") return <Forbidden />;
 
   return (
-    <main className="flex min-h-svh bg-background">
-      <aside className="flex min-h-svh w-[260px] shrink-0 flex-col bg-sidebar-background px-6 py-7 text-[#18211d] max-sm:w-[220px] max-sm:px-4">
-        <AppLogo />
-        <div className="mt-auto flex justify-end">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader className="px-6 py-7">
+          <AppLogo />
+        </SidebarHeader>
+        <SidebarContent className="px-3">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive asChild>
+                    <a href="/home">
+                      <Home />
+                      <span>Início</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="#cursos">
+                      <BookOpen />
+                      <span>Cursos</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="#inscricoes">
+                      <FileText />
+                      <span>Inscrições</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="mt-auto items-end px-6 py-7">
           <LogoutButton />
-        </div>
-      </aside>
-      <section className="flex-1 px-10 py-9 max-sm:px-6" aria-labelledby="home-heading">
-        <h1 className="m-0 text-2xl font-semibold tracking-[-.03em] text-[#18211d]" id="home-heading">
-          Início
-        </h1>
-      </section>
-    </main>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex items-center gap-3 border-b border-border px-6 py-4">
+          <h1 className="m-0 text-xl font-semibold tracking-[-.03em] text-text-main" id="home-heading">
+            Início
+          </h1>
+        </header>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -5,19 +5,20 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 export function LoginForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
-    setSuccessMessage("");
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -62,37 +63,73 @@ export function LoginForm() {
         </div>
 
         <form className="flex flex-col gap-[21px]" onSubmit={handleSubmit}>
-          <label className="flex flex-col gap-2 text-[13px] font-medium text-[#2b302c]" htmlFor="email">
-            <span>E-mail institucional</span>
-            <span className="flex min-h-12 items-center gap-[11px] rounded-lg border border-[#e3e1dc] bg-white px-[14px] text-[#868b85] transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgb(47_158_65_/_12%)]">
-              <Mail size={18} strokeWidth={1.8} aria-hidden="true" />
-              <Input className="w-full min-w-0 border-0 bg-transparent text-sm text-[#20241f] outline-none placeholder:font-normal placeholder:text-[#a4a6a1]" id="email" name="email" type="email" placeholder="Digite seu email" autoComplete="email" />
-            </span>
-          </label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-[13px] font-medium text-[#2b302c]" htmlFor="email">
+              E-mail institucional
+            </Label>
+            <div className="relative flex items-center">
+              <Mail
+                className="pointer-events-none absolute left-3.5 text-[#868b85]"
+                size={18}
+                strokeWidth={1.8}
+                aria-hidden="true"
+              />
+              <Input
+                className="h-12 rounded-lg border-[#e3e1dc] bg-white pl-10 text-sm text-[#20241f] shadow-none placeholder:font-normal placeholder:text-[#a4a6a1] focus-visible:border-primary focus-visible:ring-primary/20"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Digite seu email"
+                autoComplete="email"
+                required
+              />
+            </div>
+          </div>
 
-          <label className="flex flex-col gap-2 text-[13px] font-medium text-[#2b302c]" htmlFor="password">
-            <span>Senha</span>
-            <span className="flex min-h-12 items-center gap-[11px] rounded-lg border border-[#e3e1dc] bg-white px-[14px] text-[#868b85] transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgb(47_158_65_/_12%)]">
-              <LockKeyhole size={18} strokeWidth={1.8} aria-hidden="true" />
-              <Input className="w-full min-w-0 border-0 bg-transparent text-sm text-[#20241f] outline-none placeholder:font-normal placeholder:text-[#a4a6a1]" id="password" name="password" type="password" placeholder="Digite sua senha" autoComplete="current-password" />
-            </span>
-          </label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-[13px] font-medium text-[#2b302c]" htmlFor="password">
+              Senha
+            </Label>
+            <div className="relative flex items-center">
+              <LockKeyhole
+                className="pointer-events-none absolute left-3.5 text-[#868b85]"
+                size={18}
+                strokeWidth={1.8}
+                aria-hidden="true"
+              />
+              <Input
+                className="h-12 rounded-lg border-[#e3e1dc] bg-white pl-10 text-sm text-[#20241f] shadow-none placeholder:font-normal placeholder:text-[#a4a6a1] focus-visible:border-primary focus-visible:ring-primary/20"
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Digite sua senha"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+          </div>
 
           <Button className="mt-[3px] min-h-12 cursor-pointer rounded-lg border-0 bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
-          <p className="-mt-3 min-h-5 text-sm text-red-700" role="alert" aria-live="polite">
-            {errorMessage}
-          </p>
-          {successMessage && (
-            <p className="-mt-5 text-sm text-primary" role="status" aria-live="polite">
-              {successMessage}
-            </p>
+          {errorMessage && (
+            <Alert className="-mt-3 border-red-200 bg-red-50 text-red-800" variant="destructive">
+              <AlertDescription className="text-red-800">{errorMessage}</AlertDescription>
+            </Alert>
           )}
         </form>
 
-        <div className="my-[27px] mb-[22px] flex items-center gap-[14px] text-xs text-[#92958f] before:h-px before:flex-1 before:bg-[#e6e3de] before:content-[''] after:h-px after:flex-1 after:bg-[#e6e3de] after:content-['']"><span>ou</span></div>
-        <p className="m-0 text-center text-[13px] text-[#727671]">Ainda não tem conta? <Link className="font-semibold text-primary no-underline hover:underline hover:underline-offset-[3px]" href="#criar-conta">Crie sua conta</Link></p>
+        <div className="my-[27px] mb-[22px] flex items-center gap-[14px] text-xs text-[#92958f]">
+          <Separator className="flex-1" />
+          <span>ou</span>
+          <Separator className="flex-1" />
+        </div>
+        <p className="m-0 text-center text-[13px] text-[#727671]">
+          Ainda não tem conta?{" "}
+          <Button asChild className="h-auto p-0 font-semibold" variant="link">
+            <Link href="#criar-conta">Crie sua conta</Link>
+          </Button>
+        </p>
       </div>
     </section>
   );
